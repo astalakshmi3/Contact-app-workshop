@@ -10,9 +10,9 @@ import java.nio.file.Path;
 public class Main {
 
     static void main() {
-        ContactView contactView = new ContactView();
-        ContactController cc = new ContactController(contactView);
-        FileContactDAOImpl contactDAO = new FileContactDAOImpl(Path.of("contact.txt"));
+        FileContactDAOImpl fc = new FileContactDAOImpl(Path.of("contacts.txt"));
+        ContactView cv = new ContactView();
+        ContactController cc = new ContactController(fc,cv);
 cc.run();
             }
 }

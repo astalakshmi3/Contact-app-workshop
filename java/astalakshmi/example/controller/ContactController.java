@@ -1,6 +1,7 @@
 package astalakshmi.example.controller;
 
 import astalakshmi.example.data.ContactDAO;
+import astalakshmi.example.data.FileContactDAOImpl;
 import astalakshmi.example.exception.ExceptionHandler;
 import astalakshmi.example.model.Contact;
 import astalakshmi.example.view.ContactView;
@@ -8,39 +9,52 @@ import astalakshmi.example.view.ContactView;
     public class ContactController {
     private ContactDAO contactDAO;
     private ContactView contactView;
-    public ContactController(ContactView contactView) {
+    public ContactController(ContactDAO contactDAO,ContactView contactView) {
         this.contactDAO = contactDAO;
-        this.contactView = contactView;
+        this.contactView= contactView;
     }
         public void run ()
     {
       boolean running = true;
       while (running)
     {
-        try
-        {
             contactView.displayMenu();
-            String choice = contactView.getUserInput ("").trim();
+            String choice = contactView.getUserInput ("Select the option").trim();
+                   try {
                     switch (choice)
                     {
                         case "1" :
-                contactView.displayContacts(contactDAO.findAll());
+                            try {
+                                contactView.displayContacts(contactDAO.findAll());
+                            }
+                            catch (Exception e) {
+                                contactView.displayError(e.getMessage());
+                            }
                             break;
                         case "2" :
-                           // String name = contactView.getUserInput ("Name").trim();
-                         //   String phoneNumber = contactView.getUserInput ("Phone Number").trim();
-                            contactDAO.save((Contact) contactDAO);
-                            contactView.displayContacts(contactDAO.findAll());
-                        case "3":
-                            String email = contactView.getUserInput ("Email").trim();
-                            Contact contact = contactDAO.findByName(email);
-                            if (contact == null)
-                            {
-                                contactView.displayMessage("Contact not found");
 
+                                String name = contactView.getUserInput("Name").trim();
+                                String phoneNumber = contactView.getUserInput("Phone Number").trim();
+                            try {
+                               contactDAO.save(new Contact(name,phoneNumber));
+                               contactView.displayMessage("Contact saved");
                             }
-                            else {
-                                contactView.displayMessage("Contact not found" + contact.getName());
+                            catch (Exception e) {
+                                contactView.displayError(e.getMessage());
+                            }
+                        case "3":
+                            String searchName = contactView.getUserInput ("Search by name").trim();
+                            Contact found = contactDAO.findByName(searchName);
+                            try {
+                                if (found == null) {
+                                    contactView.displayMessage("Contact not found");
+
+                                } else {
+                                    contactView.displayMessage("Contact not found" + found.getName()+ "-" + found.getPhoneNumber());
+                                }
+                            }
+                            catch (Exception e) {
+                                contactView.displayError(e.getMessage());
                             }
                         case "4":
                         {
@@ -51,10 +65,9 @@ import astalakshmi.example.view.ContactView;
                             contactView.displayMessage("Invalid choice");
                     }
         }
-        catch (Exception e)
-        {
-contactView.displayError(ExceptionHandler.handleException(e));
-        }
+                   catch (Exception e) {
+                       contactView.displayError(e.getMessage());
+                   }
     }
+           }
     }
-}
