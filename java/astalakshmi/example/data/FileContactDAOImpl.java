@@ -4,54 +4,83 @@ import astalakshmi.example.exception.ContactStorageException;
 import astalakshmi.example.exception.DuplicateContactException;
 import astalakshmi.example.model.Contact;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
-import static jdk.internal.org.jline.utils.InfoCmp.Capability.lines;
 
-public class FileContactDAOImpl {
-   private final Path filePath;
+public class FileContactDAOImpl implements ContactDAO {
 
-    public FileContactDAOImpl(Path filePath) {
-        this.filePath = filePath;
+    private final Path file;
+
+    public FileContactDAOImpl(Path file) {
+        this.file = file;
     }
-    public void ensureFileExit() throws ContactStorageException
-    {
-        try
-        {
-            if (Files.notExists(filePath))
-            {
-                Path newFilePath = filePath.getParent().resolve(filePath.getFileName().toString());
-                if (Files.notExists(newFilePath))
-                {
-                    Files.createDirectories(newFilePath);
+
+    public void ensureFileExists() throws ContactStorageException {
+        try {
+            if (Files.notExists(file)) {
+                Path parent = file.getParent();
+                if (parent != null && Files.notExists(parent)) {
+                    Files.createDirectories(parent);
                 }
+                Files.createFile(file);
             }
         } catch (IOException e) {
-            throw new ContactStorageException("Could not create contact file:" + filePath, e);
+            throw new ContactStorageException("Could not create contact");
         }
     }
 
+    @Override
     public List<Contact> findAll() throws ContactStorageException {
-        ensureFileExit();
+        ensureFileExists();
         List<Contact> contacts = new ArrayList<>();
-        try (var lines = Files.lines(filePath))  // open and close the file safely
-        {
-            lines.filter(line -> ! line.isEmpty()); // ignore the empty file
-            contacts.add(new Contact(";","1"));
+        try (var lines = Files.lines(file)) {
+            lines.filter(line -> !line.isBlank()).forEach(line ->
+            {
+                String[] parts = line.split(";", -1);
+                if (parts.length == 2) {
+                    contacts.add(new Contact(parts[0], parts[1]));
+                }
+            });
 
+
+            return contacts;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ContactStorageException("Error", e);
         }
-        return contacts;
     }
+
+    @Override
     public void save(Contact contact) throws ContactStorageException, DuplicateContactException {
-        ensureFileExit();
-        Contact existing =  (contact.getName());
-
+        ensureFileExists();
+        Contact existing = findByName(contact.getName());
+        if (existing != null) {
+            throw new DuplicateContactException("Contact already exists" + contact.getName());
+        }
+        try (BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.APPEND)) {// try with resource
+            writer.write(contact.getName() + ";" + contact.getPhoneNumber());
+            writer.newLine();
+        } catch (IOException e) {
+            throw new ContactStorageException("Error", e);
+        }
     }
 
+    @Override
+    public Contact findByName(String name) throws ContactStorageException {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be empty");
+        }
+        String search = name.trim();
+        for (Contact contact : findAll())
+            if (contact.getName().equals(search))
+            {
+                return contact;
+    }
+                return null;
+}
 }
