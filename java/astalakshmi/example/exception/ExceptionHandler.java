@@ -3,7 +3,7 @@ package astalakshmi.example.exception;
 public class ExceptionHandler {
     private ExceptionHandler() {
     }
-    public static void handleException(Exception e) {
-
+    public static String handleException(Exception e) {
+        return  e.getMessage();
     }
 }
