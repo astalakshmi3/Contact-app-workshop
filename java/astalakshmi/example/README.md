@@ -75,3 +75,7 @@ class Contact {
     FileContactDAOImpl ..> DuplicateContactException : throws
     
  ```
+
+### MVC (Model - View - Controller)
+
+MVC (Model–View–Controller) is a software design pattern that organizes an application into three clear parts, each with a specific responsibility. The Model represents the data and business rules of the application and is responsible for validation and core logic. The View handles all user interaction, such as displaying menus, messages, and receiving input, without containing any business logic. The Controller acts as the central coordinator that manages the application flow by receiving user actions from the View, processing them using the Model and data layer, and then deciding what the View should display. This separation of responsibilities makes applications easier to understand, maintain, test, and scale, and helps developers build clean, structured, and professional software systems.
